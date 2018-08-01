@@ -125,7 +125,8 @@
         console.log(Distanzen);
         var Distanzen_sortiert = Distanzen_sortieren(Distanzen);
         console.log("Distanzen sortiert: ");console.log(Distanzen_sortiert);
-        var Minimum = minimale_Distanz(Distanzen);
+        var Minimum = minimale_Distanz(Distanzen_sortiert);
+        var Second = zweitminimale_Distanz(Distanzen_sortiert);
 
         // Ex: Distanzen nach Größe sortieren
         /*function Distanzen_sortieren_alt(Distances) {
@@ -146,18 +147,29 @@
         function Distanzen_sortieren(Distances) {
             var Distances_sorted = new Map([...Distances.entries()].sort((a, b) => a[1] - b[1]));
             console.log("ds");console.log(Distances_sorted);
-            if(Distances_sorted[0] > 0) {
-                // es fehlt noch Logik, um zu checken, ob die nächsten auch genug entfernt sind, sodass es wirklich ein Minimum ist.
-                return Distances_sorted;
-            }
-            else {
-                return null;
-            }
+            // es fehlt noch Logik, um zu checken, ob die nächsten auch genug entfernt sind, sodass es wirklich ein Minimum ist.
+            return Distances_sorted;
         }
 
         // zu welchem ist die Distanz am kleinsten?
         function minimale_Distanz(Distances_sorted) {
-            
+            if (Distances_sorted.entries().next().value[1] > 0) {
+                return Distances_sorted.entries().next().value[1];
+            } else {
+                return null;
+            }
+        }
+
+        // zweitkleinste Distanz
+        function zweitminimale_Distanz(Distances_sorted) {
+            var entries = Distances_sorted.entries();
+            entries.next(); // einmal.
+            var second = entries.next(); // .zweimal, um zum zweiten Objekt zu kommen
+            if (second.value[1] > 0) {
+                return second.value[1];
+            } else {
+                return null;
+            }
         }
 
 
