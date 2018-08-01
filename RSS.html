@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="utf-8">
+    <script>
+
+        /* Das Prinzip ist die Auswertung der RSS Werte (dem aktuellen Footprint) am aktuellen Punkt und der Vergleich mit einem Set gespeicherter Vergleichspunkte
+        *  
+        *  Es gibt: eine Anzahl Router (var ROUTER)
+        *           verschiedene Sets von gespeicherten Footprints, z.B. zu verschiedenen Zeiten (var Footprint_Sets)
+        *           je Set die physischen Orte der Router als x,y - Koordinaten (var RSS_locations)
+        *           je Set gespeicherte RSS Werte jedes (erkennbaren) Routers (var RSS_values)
+        *           
+        *  das wird verglichen mit den aktuellen RSS Werten (var aktuelle_RSS), um die Distanzen (var aktuelle_Distanzen) und damit (hoffentlich) die aktuelle Position (var aktuelle_position) zu bestimmen.
+        *
+        */
+
+        // fiktive Testdaten
+        
+        //Routernamen
+        var ROUTER = new Map(); // MAC-Adresse, Routernummer / id, die später im Vektor der Stelle entspricht
+        ROUTER
+        .set("234512b4eb5e", 1)
+        .set("84b4e1c2c384", 2)
+        .set("56b4bb33b343",8)
+        .set("42b324e73c89",4)
+        .set("22bb4379bb51",3)
+        .set("51bb4879d1d3",6)
+        .set("51bb58794d43",5)
+        .set("41bb4543c143",9)
+        .set("83bb422c1143",7);
+        
+        //RSS-Footprints_Metadaten
+        var RSS_Footprint_Sets = new Map(); // (SetID, IDs)
+        RSS_Footprint_Sets.set("1",[1,7,22,15,13,4,7,23,11]);
+        
+        //RSS-Footprints
+        var RSS_locations = new Map(); // (Footprint ID, x,y-Koordinaten, {(RouterID1, RSS Wert),(RouterID2, RSS Wert), ... , (RouterIDn, RSS Wert)}) //sollen die jeweils noch nen Timestamp bekommen? Macht das updaten dann leichter, aber das Nachgucken evtl. langsamer(??)
+        RSS_locations
+        .set("5",[3,5])
+        .set("1",[18,25])
+        .set("7",[35,309])
+        .set("15",[18,45])
+        .set("22",[37,14])
+        .set("13",[99,07])
+        .set("23",[14,13])
+        .set("4",[29,48])
+        .set("7",[13,18])
+        .set("11",[22,22])
+        .set("12",[304,15])
+        .set("14",[29,39])
+        .set("16",[45,47])
+        .set("18",[45,48])
+        .set("198",[39,41])
+        .set("221",[19,39])
+        .set("51",[27,58]);
+        
+        var RSS_values = new Map(); // (Footprint ID, [RSS Werte]);
+        RSS_values
+        .set("1",[33,0,0,32,0,0,66,0,0])
+        .set("7",[13,0,0,44,0,44,0,0,0])
+        .set("5",[0,0,99,0,12,12,0,87,0])
+        .set("15",[45,0,22,22,0,0,0,0,0])
+        .set("22",[0,0,12,0,0,9,99,99,99])
+        .set("13",[0,11,0,9,0,99,0,0,0])
+        .set("23",[0,11,0,9,0,99,0,0,0])
+        .set("4",[0,0,0,0,0,0,0,0,0])
+        .set("7",[0,0,45,0,22,0,0,0,0])
+        .set("11",[0,0,0,45,0,0,0,0,0])
+        .set("12",[0,0,0,0,22,0,0,0,0])
+        .set("14",[0,0,45,0,0,0,0,0,0])
+        .set("18",[0,0,0,23,0,0,22,2,0])
+        .set("198",[0,0,0,32,2,0,0,0,0])
+        .set("221",[0,11,22,0,0,0,0,0,0]);
+        
+        function test(){
+            for (var [key,value] of RSS_locations) {
+                console.log("Footprint ID: " + key + "\nRSS-Werte: " + RSS_values.get(key) + "\n @: " + value);
+            }
+        }
+        
+        /* Matching 
+        *  
+        *  Für jede Location werden die einzelnen RSS Werte mit dem aktuellen Set verglichen.
+        *  
+        */
+        
+        var aktuelle_RSS = new Array();
+        aktuelle_RSS = [22,0,0,34,0,9,0,0,0]; //TESTwerte
+        
+        var test_RSS = [22,0,0,4,12,0,48,0,0];
+        
+        function RSS_Distanz(aRSS, iRSS) {
+            /* Gibt die euklidische Distanz zwischen zwei RSS Vektoren zurück
+            *  Wurzel aus den Differenzenquadraten
+            *
+            *  @aRSS as Array, @iRSS as Array
+            *  -> sum as Float
+            *
+            */
+            
+            var sum = 0;
+            for (var r = 0; r < aRSS.length; r++) {
+                sum += Math.pow((aRSS[r]-iRSS[r]),2);
+            }
+            return Math.sqrt(sum);
+        }
+        
+        function calc_distances(aRSS) {
+            /*
+            * Erhebt für alle saved_Locations die euklidische Distanz zum übergebenen Footprint (aRSS)
+            * 
+            * @aRSS as Array
+            * -> Distanzen as Map
+            */
+            var Distanzen = new Map();
+            for (var [i,i_RSS] of RSS_values) {
+                Distanzen.set(i, RSS_Distanz(i_RSS,aRSS));
+            }
+            return Distanzen;
+        }
+
+        // Berechne die euklidischen Distanzen zu den ganzen gespeicherten Footprints
+        var Distanzen = new Map();
+        Distanzen = calc_distances(aktuelle_RSS);
+        var Minimum = minimale_Distanz(Distanzen);
+
+        // zu welchem ist die Distanz am kleinsten?
+        function minimale_Distanz(Distances) {
+            var dvs = Distances.values();
+            var d = 200000;
+            var minimum = null;
+            var second = null;
+            while (d != undefined){ // kommt mir gewagt vor... geht bestimmt besser!
+                d = dvs.next().value;
+                if (d < minimum || minimum === null) {minimum = d;}
+                else if (d < second || second === null) {second = d;}
+            }
+            if (minimum < 2000000 && minimum > 0) {
+                var ret = [minimum,null];
+                if (second < 2000000 && second > 0) {
+                    ret = [minimum,second];
+                }
+                return ret;
+            }
+            else {
+                return null;
+            }
+        }
+    </script>
+</head>
+<body>
+    
+        
+
+</body></html>
