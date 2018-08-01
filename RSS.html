@@ -56,15 +56,15 @@
         
         var RSS_values = new Map(); // (Footprint ID, [RSS Werte]);
         RSS_values
-        .set("1",[33,0,0,32,0,0,66,0,0])
-        .set("7",[13,0,0,44,0,44,0,0,0])
+        .set("1",[33,0,35,32,0,0,66,0,0])
+        .set("7",[13,45,0,44,0,44,0,0,0])
         .set("5",[0,0,99,0,12,12,0,87,0])
         .set("15",[45,0,22,22,0,0,0,0,0])
         .set("22",[0,0,12,0,0,9,99,99,99])
         .set("13",[0,11,0,9,0,99,0,0,0])
         .set("23",[0,11,0,9,0,99,0,0,0])
         .set("4",[0,0,0,0,0,0,0,0,0])
-        .set("7",[0,0,45,0,22,0,0,0,0])
+        .set("7",[0,12,45,0,22,0,0,0,0])
         .set("11",[0,0,0,45,0,0,0,0,0])
         .set("12",[0,0,0,0,22,0,0,0,0])
         .set("14",[0,0,45,0,0,0,0,0,0])
@@ -122,30 +122,45 @@
         // Berechne die euklidischen Distanzen zu den ganzen gespeicherten Footprints
         var Distanzen = new Map();
         Distanzen = calc_distances(aktuelle_RSS);
+        console.log(Distanzen);
+        var Distanzen_sortiert = Distanzen_sortieren(Distanzen);
+        console.log("Distanzen sortiert: ");console.log(Distanzen_sortiert);
         var Minimum = minimale_Distanz(Distanzen);
 
-        // zu welchem ist die Distanz am kleinsten?
-        function minimale_Distanz(Distances) {
-            var dvs = Distances.values();
-            var d = 200000;
-            var minimum = null;
-            var second = null;
-            while (d != undefined){ // kommt mir gewagt vor... geht bestimmt besser!
-                d = dvs.next().value;
-                if (d < minimum || minimum === null) {minimum = d;}
-                else if (d < second || second === null) {second = d;}
-            }
-            if (minimum < 2000000 && minimum > 0) {
-                var ret = [minimum,null];
-                if (second < 2000000 && second > 0) {
-                    ret = [minimum,second];
-                }
-                return ret;
+        // Ex: Distanzen nach Größe sortieren
+        /*function Distanzen_sortieren_alt(Distances) {
+            var Distances_sorted = [...Distanzen].map(e =>{ return (e[1],e);}).slice().sort(function(a, b) {
+                return a - b; 
+            });
+            if(Distances_sorted[0] > 0) {
+                // es fehlt noch Logik, um zu checken, ob die nächsten auch genug entfernt sind, sodass es wirklich ein Minimum ist.
+                return Distances_sorted;
             }
             else {
                 return null;
             }
         }
+        */
+
+        // Distanzen nach Größe sortieren
+        function Distanzen_sortieren(Distances) {
+            var Distances_sorted = new Map([...Distances.entries()].sort((a, b) => a[1] - b[1]));
+            console.log("ds");console.log(Distances_sorted);
+            if(Distances_sorted[0] > 0) {
+                // es fehlt noch Logik, um zu checken, ob die nächsten auch genug entfernt sind, sodass es wirklich ein Minimum ist.
+                return Distances_sorted;
+            }
+            else {
+                return null;
+            }
+        }
+
+        // zu welchem ist die Distanz am kleinsten?
+        function minimale_Distanz(Distances_sorted) {
+            
+        }
+
+
     </script>
 </head>
 <body>
