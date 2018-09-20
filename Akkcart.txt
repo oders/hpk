@@ -1,0 +1,40 @@
+
+Algorithmus 
+
+Datenstruktur für Locations:
+x-Koordinate, y-Koordinate, Signalstärke, Zeit, Device, Koordinatensystem
+
+//Beispiel
+/*
+
+23,20.556,0.541,123901823,Android-23113,akkkorrd
+
+
+*/
+
+
+Sammeln der WIFI Daten (AccessPoint, Device, RSSI Signal level [db]): // auch Link Quality [xx/100]?
+wavemon
+iwspy
+iwconfig
+airodump-ng
+airodump-zg
+kismet
+
+Matching Algorithmen:
+Fingerprint matching algorithm uses kNN, SVM etc. technique to
+find the best match among multiple candidate location fingerprints
+
+
+Notizen:
+Genauigkeit verbessern:
+Unterschiedliche Datensets für unterschiedliche Anzahl von Menschen verwenden
+
+Drop falscher Daten:
+wenn der errechnete Userspeed höher als 5m/s ist, erstmal einsacken, nicht verwenden, und nur, wenn die neue Location bei den folgenden Paketen gleich ist, springen lassen.
+
+Algo-Speedup:
+Nur die Locations um die genutzten Access Points sind zu berücksichtigen
+
+Datenbank für Locations
+
